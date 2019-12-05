@@ -5,6 +5,8 @@ Binaries/
 Config
 WindowsNoEditor/
 Content/AnimStarterPack/
+Content/Weapons/
+Content/WeaponEffects/
 .vs
 .vscode
 .sln
