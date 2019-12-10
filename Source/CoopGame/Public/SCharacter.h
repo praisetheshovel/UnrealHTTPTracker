@@ -62,8 +62,11 @@ protected:
 	// Begin Play
 	UPROPERTY(EditDefaultsOnly, Category = "Player")
 		TSubclassOf<ASWeapon> StarterWeaponClass;
+
 	UPROPERTY(VisibleDefaultsOnly, Category = "Player")
 		FName WeaponAttachSocketName;
+
+
 
 
 public:	

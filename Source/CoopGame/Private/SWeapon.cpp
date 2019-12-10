@@ -8,6 +8,9 @@
 #include "Particles/ParticleSystem.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "HAL/IConsoleManager.h"
+#include "GameFramework/Pawn.h"
+#include "Templates/Casts.h"
+#include "GameFramework/PlayerController.h"
 
 static int32 DebugWeaponDrawing = 0;
 FAutoConsoleVariableRef CVARDebeugWeaponDrawing(
@@ -91,5 +94,16 @@ void ASWeapon::PlayFireEffects(FVector TracerEndPoint)
 			TracerComp->SetVectorParameter(TracerTargetName, TracerEndPoint);
 		}
 	}
+
+	APawn* MyOwner = Cast<APawn>(GetOwner());
+	if (MyOwner)
+	{
+		APlayerController* PC = Cast<APlayerController>(MyOwner->GetController());
+		if (PC)
+		{
+			PC->ClientPlayCameraShake(FireCamShake);
+		}
+	}
+
 }
 
