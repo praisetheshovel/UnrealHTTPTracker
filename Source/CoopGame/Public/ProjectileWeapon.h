@@ -4,7 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "SWeapon.h"
+#include "ProjectileWeapon_Grenade.h"
 #include "ProjectileWeapon.generated.h"
+
 
 /**
  * 
@@ -20,5 +22,6 @@ protected:
 
 	/** Projectile class to spawn */
 	UPROPERTY(EditDefaultsOnly, Category = Projectile)
-		TSubclassOf<AActor> ProjectileClass;
+		TSubclassOf<class AProjectileWeapon_Grenade> ProjectileClass;
 };
+

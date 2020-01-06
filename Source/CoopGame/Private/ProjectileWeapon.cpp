@@ -23,3 +23,4 @@ void AProjectileWeapon::Fire()
 		GetWorld()->SpawnActor<AActor>(ProjectileClass, MuzzleLocation, EyeRotation, SpawnParams);
 	}
 }
+

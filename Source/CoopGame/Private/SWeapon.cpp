@@ -11,11 +11,22 @@
 #include "GameFramework/Pawn.h"
 #include "Templates/Casts.h"
 #include "GameFramework/PlayerController.h"
+#include "PhysicalMaterials/PhysicalMaterial.h"
+#include "Runtime/JsonUtilities/Public/JsonObjectConverter.h"
+#include "Templates/SharedPointer.h"
+#include "Misc/Char.h"
+#include "Runtime/PerfCounters/Public/PerfCountersModule.h"
+#include "Runtime/Json/Public/Serialization/JsonWriter.h"
+#include "Runtime/Json/Public/Policies/JsonPrintPolicy.h"
+#include "Misc/FileHelper.h"
+#include "Misc/DateTime.h"
+#include "CoopGame.h"
 
-static int32 DebugWeaponDrawing = 0;
-FAutoConsoleVariableRef CVARDebeugWeaponDrawing(
+
+static int32 DebugWeaponDrawingRifle = 0;
+FAutoConsoleVariableRef CVARDebeugWeaponDrawingRifle(
 	TEXT("COOP.DebugWeapons"),
-	DebugWeaponDrawing,
+	DebugWeaponDrawingRifle,
 	TEXT("Draw Debug Lines for Weapons"),
 	ECVF_Cheat);
 
@@ -27,6 +38,8 @@ ASWeapon::ASWeapon()
 
 	MuzzleSocketName = "MuzzleFlashSocket";
 	TracerTargetName = "BeamEnd";
+
+
 }
 
 void ASWeapon::Fire()
@@ -47,28 +60,77 @@ void ASWeapon::Fire()
 		QueryParams.AddIgnoredActor(MyOwner);
 		QueryParams.AddIgnoredActor(this); // Ignoring weapon
 		QueryParams.bTraceComplex = true;
+		QueryParams.bReturnPhysicalMaterial = true;
 
 		// Particle "Target" parameter
 		FVector TracerEndPoint = TraceEnd;
 
 		FHitResult Hit;
+		FHitJST HitJST;
 		if (GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd, ECC_Visibility, QueryParams))
 		{
+			// Recording Bone hit on skeletal mesh
+			FName RecordBone = Hit.BoneName;
+			float RecordDistance = Hit.Distance;
+
+			HitJST.Time = HitJST.Time.Now();
+			HitJST.ShotBoneHit = RecordBone.ToString();
+			HitJST.ShotDistance = RecordDistance;
+
+			// UE_LOG(LogTemp, Warning, TEXT("%s"), *HitBone.ToString());
+
+			// TODO:: Use FJsonObjectConverter to serialize our FHitJST struct to a JSON format
+			TSharedPtr<FJsonObject> JsonObject = MakeShareable(new FJsonObject);
+			// JsonObject->SetStringField("Name", "Super Sword");
+			// JsonObject->SetNumberField("Damage", 15);
+			// JsonObject->SetNumberField("Weight", 3);
+			JsonObject->SetStringField("Time",(HitJST.Time).ToString());
+			JsonObject->SetStringField("Impact", HitJST.ShotBoneHit);
+			JsonObject->SetNumberField("Distance", HitJST.ShotDistance);
+
+			FString OutputString;
+			//TSharedRef< TJsonWriter<> > Writer = TJsonWriterFactory<>::Create(&OutputString);
+			TSharedRef< TJsonWriter<> > Writer = TJsonWriterFactory<>::Create(&OutputString);
+			FJsonSerializer::Serialize(JsonObject.ToSharedRef(), Writer);
+
+			//UE_LOG(LogTemp, Warning, TEXT("%s"), *OutputString);
+
+			OutputString += TEXT(",\n");
+			// TODO:: Output JSON information to a log file in "LogJST" folder in /Content
+			FFileHelper::SaveStringToFile(OutputString, *(FPaths::ProjectLogDir() + "\\" + "LogJST.json"), FFileHelper::EEncodingOptions::AutoDetect, &IFileManager::Get(), FILEWRITE_Append);
+
+			
+
 			// Blocking hit, process damage
 
 			AActor* HitActor = Hit.GetActor();
 
 			UGameplayStatics::ApplyPointDamage(HitActor, 20.0f, ShotDirection, Hit, MyOwner->GetInstigatorController(), this, DamageType);
-			
-			if (ImpactEffect)
+
+			EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get());
+
+			UParticleSystem* SelectedEffect = nullptr;
+
+			switch (SurfaceType)
 			{
-				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactEffect, Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
+			case SURFACE_FLESHDEFAULT:
+			case SURFACE_FLESHVULNERABLE:
+				SelectedEffect = FleshImpactEffect;
+				break;
+			default:
+				SelectedEffect = DefaultImpactEffect;
+				break;
+			}
+
+			if (SelectedEffect)
+			{
+				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SelectedEffect, Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
 			}
 
 			TracerEndPoint = Hit.ImpactPoint;
 		}
 
-		if (DebugWeaponDrawing > 0) 
+		if (DebugWeaponDrawingRifle > 0)
 		{
 			DrawDebugLine(GetWorld(), EyeLocation, TraceEnd, FColor::White, false, 1.0f, 0.f, 1.0f);
 		}

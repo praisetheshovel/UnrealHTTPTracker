@@ -11,6 +11,20 @@ class UDamageType;
 class UParticleSystem;
 class UCameraShake;
 
+USTRUCT(BlueprintType)
+struct FHitJST
+{
+	GENERATED_USTRUCT_BODY()
+
+public:
+	UPROPERTY()
+		FDateTime Time;
+	UPROPERTY()
+		FString ShotBoneHit;
+	UPROPERTY()
+		float ShotDistance;
+};
+
 UCLASS()
 class COOPGAME_API ASWeapon : public AActor
 {
@@ -40,13 +54,17 @@ protected:
 		UParticleSystem* MuzzleEffect;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
-		UParticleSystem* ImpactEffect;
+		UParticleSystem* DefaultImpactEffect;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
+		UParticleSystem* FleshImpactEffect;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 		UParticleSystem* TracerEffect;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 		TSubclassOf<UCameraShake> FireCamShake;
+
 
 public:
 
