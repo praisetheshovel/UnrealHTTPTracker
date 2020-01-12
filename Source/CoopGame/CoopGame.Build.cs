@@ -10,7 +10,7 @@ public class CoopGame : ModuleRules
 	
 		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore" });
 
-        PrivateDependencyModuleNames.AddRange(new string[] {"Json", "JsonUtilities", "PerfCounters" });
+        PrivateDependencyModuleNames.AddRange(new string[] { "Http", "Json", "JsonUtilities", "PerfCounters" });
 
         // Uncomment if you are using Slate UI
         // PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });

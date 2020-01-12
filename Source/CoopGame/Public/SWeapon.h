@@ -11,10 +11,10 @@ class UDamageType;
 class UParticleSystem;
 class UCameraShake;
 
-USTRUCT(BlueprintType)
+USTRUCT()
 struct FHitJST
 {
-	GENERATED_USTRUCT_BODY()
+	GENERATED_BODY()
 
 public:
 	UPROPERTY()
