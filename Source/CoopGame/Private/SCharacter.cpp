@@ -3,6 +3,7 @@
 
 #include "Public/SCharacter.h"
 #include "Public/SWeapon.h"
+#include "Public/HTTPService.h"
 #include "Components/InputComponent.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"

@@ -23,6 +23,7 @@ struct FRequest_Login {
 	FRequest_Login() {}
 };
 
+
 USTRUCT()
 struct FNestedUser {
 	GENERATED_USTRUCT_BODY()
@@ -43,6 +44,41 @@ struct FResponse_Login {
 	FResponse_Login() {}
 };
 
+USTRUCT()
+struct FResponse_Stats_Shot {
+	GENERATED_USTRUCT_BODY()
+
+	UPROPERTY() FString Time;
+	UPROPERTY() FString _id;
+	UPROPERTY() FString Impact;
+	UPROPERTY() FString Distance;
+
+};
+
+USTRUCT()
+struct FResponse_Stats {
+	GENERATED_USTRUCT_BODY()
+
+	UPROPERTY() FString _id;
+
+	UPROPERTY() FString user;
+
+	UPROPERTY() TArray<FResponse_Stats_Shot> shots;
+
+	FResponse_Stats() {}
+};
+
+USTRUCT()
+struct FSend_Shot {
+	GENERATED_USTRUCT_BODY()
+
+	UPROPERTY() FString Time;
+	UPROPERTY() FString Impact;
+	UPROPERTY() FString Distance;
+
+	FSend_Shot() {}
+};
+
 
 
 UCLASS()
@@ -59,7 +95,7 @@ protected:
 	FHttpModule* Http;
 	FString ApiBaseUrl = "http://localhost:5000/api/";
 
-	FString AuthorizationHeader = TEXT("Authorization");
+	FString AuthorizationHeader = TEXT("x-auth-token");
 	void SetAuthorizationHash(FString Hash, TSharedRef<IHttpRequest>& Request);
 
 	TSharedRef<IHttpRequest> RequestWithRoute(FString Subroute);
@@ -67,6 +103,7 @@ protected:
 
 	TSharedRef<IHttpRequest> GetRequest(FString Subroute);
 	TSharedRef<IHttpRequest> PostRequest(FString Subroute, FString ContentJsonString);
+	TSharedRef<IHttpRequest> PutRequest(FString Subroute, FString ContentJsonString);
 	void Send(TSharedRef<IHttpRequest>& Request);
 
 	bool ResponseIsValid(FHttpResponsePtr Response, bool bWasSuccessful);
@@ -76,7 +113,10 @@ protected:
 	template <typename StructType>
 	void GetStructFromJsonString(FHttpResponsePtr Response, StructType& StructOutput);
 
-public:	
+	FString TempTokenHolder;
+
+public:
+	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
@@ -84,5 +124,11 @@ public:
 
 	void Login(FRequest_Login LoginCredentials);
 	void LoginResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+
+	void GetStatsMe();
+	void GetStatsMeResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+
+	void PutShotStats(FSend_Shot ShotBody);
+	void PutShotStats_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 };
