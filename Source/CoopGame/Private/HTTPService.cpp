@@ -2,6 +2,7 @@
 
 
 #include "Public/HTTPService.h"
+#include "Public/SCharacter.h"
 
 #include "Runtime/Online/HTTP/Public/Interfaces/IHttpResponse.h"	// IHttpRequest
 #include "Runtime/Online/HTTP/Public/HttpModule.h"					// CreateRequest
@@ -9,11 +10,16 @@
 #include "Runtime/JsonUtilities/Public/JsonObjectConverter.h"		// FJsonObjectConverter
 #include "Runtime/Json/Public/Dom/JsonObject.h"						// GetObjectField
 
+
 // Sets default values
 AHTTPService::AHTTPService()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
+
+	Http = &FHttpModule::Get();
+	ApiBaseUrl = "http://localhost:5000/api/";
+	AuthorizationHeader = TEXT("x-auth-token");
 }
 
 // Called when the game starts or when spawned
@@ -24,12 +30,14 @@ void AHTTPService::BeginPlay()
 
 	// You can uncomment this out for testing.
 	
+	/*
 	FRequest_Login LoginCredentials;
 	LoginCredentials.email = TEXT("onionknight@gmail.com");
 	LoginCredentials.password = TEXT("123123");
-	// UE_LOG(LogTemp, Warning, TEXT("email: %s"), *(LoginCredentials.email));
+	UE_LOG(LogTemp, Warning, TEXT("email: %s"), *(LoginCredentials.email));
 	
 	Login(LoginCredentials);
+	*/
 }
 
 TSharedRef<IHttpRequest> AHTTPService::RequestWithRoute(FString Subroute) {
@@ -96,7 +104,6 @@ template <typename StructType>
 void AHTTPService::GetStructFromJsonString(FHttpResponsePtr Response, StructType& StructOutput) {
 	StructType StructData;
 	FString JsonString = Response->GetContentAsString();
-	//UE_LOG(LogTemp, Warning, TEXT("Response is: %s"), *JsonString);
 	FJsonObjectConverter::JsonObjectStringToUStruct<StructType>(JsonString, &StructOutput, 0, 0);
 }
 
@@ -108,6 +115,8 @@ void AHTTPService::Login(FRequest_Login LoginCredentials) {
 	FString ContentJsonString;
 	GetJsonStringFromStruct<FRequest_Login>(LoginCredentials, ContentJsonString);
 
+	UE_LOG(LogTemp, Warning, TEXT("Struct into a JSON string: %s"), *ContentJsonString);
+
 	TSharedRef<IHttpRequest> Request = PostRequest("auth", ContentJsonString);
 	Request->OnProcessRequestComplete().BindUObject(this, &AHTTPService::LoginResponse);
 	Send(Request);
@@ -116,9 +125,10 @@ void AHTTPService::Login(FRequest_Login LoginCredentials) {
 void AHTTPService::LoginResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful) {
 	if (!ResponseIsValid(Response, bWasSuccessful)) return;
 
+	
 	FResponse_Login LoginResponse;
 	GetStructFromJsonString<FResponse_Login>(Response, LoginResponse);
-
+	/*
 	UE_LOG(LogTemp, Warning, TEXT("Token: %s"), *LoginResponse.token);
 	UE_LOG(LogTemp, Warning, TEXT("ID: %s"), *LoginResponse.user.id);
 	UE_LOG(LogTemp, Warning, TEXT("Name: %s"), *LoginResponse.user.name);
@@ -135,8 +145,7 @@ void AHTTPService::LoginResponse(FHttpRequestPtr Request, FHttpResponsePtr Respo
 	TestShot.Time = "TestTime";
 	TestShot.Impact = "TestImpact";
 	TestShot.Distance = "TestDistance";
-
-	PutShotStats(TestShot);
+	*/
 }
 
 void AHTTPService::GetStatsMe() {

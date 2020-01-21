@@ -9,6 +9,39 @@
 class UCameraComponent;
 class USpringArmComponent;
 class ASWeapon;
+class AHTTPService;
+
+USTRUCT()
+struct FRequest_Login {
+	GENERATED_USTRUCT_BODY()
+
+	UPROPERTY() FString email;
+	UPROPERTY() FString password;
+
+	FRequest_Login() {}
+};
+
+
+USTRUCT()
+struct FNestedUser {
+	GENERATED_USTRUCT_BODY()
+
+	UPROPERTY() FString id;
+	UPROPERTY() FString name;
+	UPROPERTY() FString avatar;
+
+	FNestedUser() {}
+};
+
+USTRUCT()
+struct FResponse_Login {
+	GENERATED_USTRUCT_BODY()
+
+	UPROPERTY() FString token;
+	UPROPERTY() FNestedUser user;
+
+	FResponse_Login() {}
+};
 
 UCLASS()
 class COOPGAME_API ASCharacter : public ACharacter
@@ -66,7 +99,7 @@ protected:
 	UPROPERTY(VisibleDefaultsOnly, Category = "Player")
 		FName WeaponAttachSocketName;
 
-
+	AHTTPService* MyHTTPService;
 
 
 public:	

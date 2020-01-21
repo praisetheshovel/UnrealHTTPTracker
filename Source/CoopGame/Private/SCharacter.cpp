@@ -34,12 +34,22 @@ ASCharacter::ASCharacter()
 	ZoomInterpSpeed = 20.0f;
 
 	WeaponAttachSocketName = "WeaponSocket";
+
 }
 
 // Called when the game starts or when spawned
 void ASCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	FRequest_Login LoginCredentials;
+	LoginCredentials.email = TEXT("onionknight@gmail.com");
+	LoginCredentials.password = TEXT("123123");
+	UE_LOG(LogTemp, Warning, TEXT("email: %s"), *(LoginCredentials.email));
+
+	MyHTTPService = GetWorld()->SpawnActor<AHTTPService>();
+
+	MyHTTPService->Login(LoginCredentials);
 	
 	DefaultFOV = CameraComp->FieldOfView;
 

@@ -13,6 +13,11 @@ class IHttpResponse;
 typedef TSharedPtr< IHttpResponse, ESPMode::ThreadSafe > FHttpResponsePtr;
 typedef TSharedPtr< IHttpRequest > FHttpRequestPtr;
 
+struct FRequest_Login;
+struct FNestedUser;
+struct FResponse_Login;
+
+/* PLACE INTO ANOTHER FILE
 USTRUCT()
 struct FRequest_Login {
 	GENERATED_USTRUCT_BODY()
@@ -43,6 +48,8 @@ struct FResponse_Login {
 
 	FResponse_Login() {}
 };
+
+*/
 
 USTRUCT()
 struct FResponse_Stats_Shot {
@@ -93,7 +100,7 @@ public:
 protected:
 
 	FHttpModule* Http;
-	FString ApiBaseUrl = "http://localhost:5000/api/";
+	FString ApiBaseUrl;
 
 	FString AuthorizationHeader = TEXT("x-auth-token");
 	void SetAuthorizationHash(FString Hash, TSharedRef<IHttpRequest>& Request);
