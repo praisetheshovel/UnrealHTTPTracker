@@ -11,20 +11,6 @@ class UDamageType;
 class UParticleSystem;
 class UCameraShake;
 
-USTRUCT()
-struct FHitJST
-{
-	GENERATED_BODY()
-
-public:
-	UPROPERTY()
-		FDateTime Time;
-	UPROPERTY()
-		FString ShotBoneHit;
-	UPROPERTY()
-		float ShotDistance;
-};
-
 UCLASS()
 class COOPGAME_API ASWeapon : public AActor
 {

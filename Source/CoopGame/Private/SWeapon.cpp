@@ -2,6 +2,8 @@
 
 
 #include "Public/SWeapon.h"
+#include "Public/SCharacter.h"
+
 #include "Components/SkeletalMeshComponent.h"
 #include "DrawDebugHelpers.h"
 #include "Kismet/GameplayStatics.h"
@@ -38,8 +40,6 @@ ASWeapon::ASWeapon()
 
 	MuzzleSocketName = "MuzzleFlashSocket";
 	TracerTargetName = "BeamEnd";
-
-
 }
 
 void ASWeapon::Fire()
@@ -66,24 +66,37 @@ void ASWeapon::Fire()
 		FVector TracerEndPoint = TraceEnd;
 
 		FHitResult Hit;
-		FHitJST HitJST;
+		FMatch_Session_Shot MatchSessionShot;
+
 		if (GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd, ECC_Visibility, QueryParams))
 		{
 			// Recording Bone hit on skeletal mesh
 			FName RecordBone = Hit.BoneName;
 			float RecordDistance = Hit.Distance;
 
-			HitJST.Time = HitJST.Time.Now();
-			HitJST.ShotBoneHit = RecordBone.ToString();
-			HitJST.ShotDistance = RecordDistance;
+			MatchSessionShot.time = MatchSessionShot.time.Now();
+			MatchSessionShot.impact = RecordBone.ToString();
+			MatchSessionShot.distance = RecordDistance;
 
-			// UE_LOG(LogTemp, Warning, TEXT("%s"), *HitBone.ToString());
+			ASCharacter* ASC = Cast<ASCharacter>(GetOwner());
+			if (ASC) 
+			{
+				ASC->PlayerMatchSessionStats.shots.Emplace(MatchSessionShot);
 
+				UE_LOG(LogTemp, Warning, TEXT("%s"), *(ASC->PlayerMatchSessionStats.shots.Last().impact));
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Failed to cast [%s] to ASCharacter in SWeapon.cpp"), *(GetOwner()->GetName()));
+			}
+
+			//	UE_LOG(LogTemp, Warning, TEXT("%s"), *GetOwner()->GetName());
+
+			/*
 			// TODO:: Use FJsonObjectConverter to serialize our FHitJST struct to a JSON format
+
+			
 			TSharedPtr<FJsonObject> JsonObject = MakeShareable(new FJsonObject);
-			// JsonObject->SetStringField("Name", "Super Sword");
-			// JsonObject->SetNumberField("Damage", 15);
-			// JsonObject->SetNumberField("Weight", 3);
 			JsonObject->SetStringField("Time",(HitJST.Time).ToString());
 			JsonObject->SetStringField("Impact", HitJST.ShotBoneHit);
 			JsonObject->SetNumberField("Distance", HitJST.ShotDistance);
@@ -99,7 +112,7 @@ void ASWeapon::Fire()
 			// TODO:: Output JSON information to a log file in "LogJST" folder in /Content
 			FFileHelper::SaveStringToFile(OutputString, *(FPaths::ProjectLogDir() + "\\" + "LogJST.json"), FFileHelper::EEncodingOptions::AutoDetect, &IFileManager::Get(), FILEWRITE_Append);
 
-			
+			*/
 
 			// Blocking hit, process damage
 

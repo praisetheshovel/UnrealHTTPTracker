@@ -4,12 +4,15 @@
 #include "Public/SCharacter.h"
 #include "Public/SWeapon.h"
 #include "Public/HTTPService.h"
+#include "Public/CustomPlayerState.h"
+
 #include "Components/InputComponent.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/PawnMovementComponent.h"
 #include "Engine/World.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 ASCharacter::ASCharacter()
@@ -41,15 +44,26 @@ ASCharacter::ASCharacter()
 void ASCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
+	
 	FRequest_Login LoginCredentials;
 	LoginCredentials.email = TEXT("onionknight@gmail.com");
 	LoginCredentials.password = TEXT("123123");
-	UE_LOG(LogTemp, Warning, TEXT("email: %s"), *(LoginCredentials.email));
 
 	MyHTTPService = GetWorld()->SpawnActor<AHTTPService>();
 
-	MyHTTPService->Login(LoginCredentials);
+	CustomPlayerState = Cast<ACustomPlayerState>(UGameplayStatics::GetPlayerController(GetWorld(), 0)->PlayerState);
+
+	if (CustomPlayerState)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Success: CustomPlayerState Casted"));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Failed: CustomPlayerState Casted"));
+	}
+
+
+	MyHTTPService->Login(LoginCredentials, CustomPlayerState);
 	
 	DefaultFOV = CameraComp->FieldOfView;
 
@@ -79,6 +93,8 @@ void ASCharacter::MoveRight(float Value)
 void ASCharacter::BeginCrouch()
 {
 	Crouch();
+
+	MyHTTPService->GetStatsMe(CustomPlayerState->PlayerConnectionInfo.token);
 }
 
 void ASCharacter::EndCrouch() 
@@ -102,6 +118,14 @@ void ASCharacter::Fire()
 	{
 		CurrentWeapon->Fire();
 	}
+
+
+	/*
+	TESTING PLAYER CONNECTION INFO THROUGH SHOOTING CAUSE DONT WANNA BIND ANOTHER KEY
+	UE_LOG(LogTemp, Warning, TEXT("%s token: %s"), *GetName(), *CustomPlayerState->PlayerConnectionInfo.token);
+	UE_LOG(LogTemp, Warning, TEXT("%s name: %s"), *GetName(), *CustomPlayerState->PlayerConnectionInfo.user.name);
+	*/
+	
 }
 
 // Called every frame

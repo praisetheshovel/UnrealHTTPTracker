@@ -9,6 +9,7 @@
 class FHttpModule;
 class IHttpRequest;
 class IHttpResponse;
+class ACustomPlayerState;
 
 typedef TSharedPtr< IHttpResponse, ESPMode::ThreadSafe > FHttpResponsePtr;
 typedef TSharedPtr< IHttpRequest > FHttpRequestPtr;
@@ -16,6 +17,7 @@ typedef TSharedPtr< IHttpRequest > FHttpRequestPtr;
 struct FRequest_Login;
 struct FNestedUser;
 struct FResponse_Login;
+struct FMatch_Session;
 
 /* PLACE INTO ANOTHER FILE
 USTRUCT()
@@ -50,45 +52,42 @@ struct FResponse_Login {
 };
 
 */
+USTRUCT()
+struct FResponse_Stats_Matches_Shot {
+	GENERATED_BODY()
+
+	UPROPERTY() FString time;
+	UPROPERTY() FString _id;
+	UPROPERTY() FString impact;
+	UPROPERTY() FString distance;
+
+	FResponse_Stats_Matches_Shot() {}
+};
 
 USTRUCT()
-struct FResponse_Stats_Shot {
-	GENERATED_USTRUCT_BODY()
+struct FResponse_Stats_Matches {
+	GENERATED_BODY()
 
-	UPROPERTY() FString Time;
-	UPROPERTY() FString _id;
-	UPROPERTY() FString Impact;
-	UPROPERTY() FString Distance;
+	UPROPERTY() TArray<FResponse_Stats_Matches_Shot> shots;
 
+	FResponse_Stats_Matches() {}
 };
 
 USTRUCT()
 struct FResponse_Stats {
-	GENERATED_USTRUCT_BODY()
+	GENERATED_BODY()
 
 	UPROPERTY() FString _id;
 
 	UPROPERTY() FString user;
 
-	UPROPERTY() TArray<FResponse_Stats_Shot> shots;
+	UPROPERTY() TArray<FResponse_Stats_Matches> matches;
 
 	FResponse_Stats() {}
 };
 
-USTRUCT()
-struct FSend_Shot {
-	GENERATED_USTRUCT_BODY()
 
-	UPROPERTY() FString Time;
-	UPROPERTY() FString Impact;
-	UPROPERTY() FString Distance;
-
-	FSend_Shot() {}
-};
-
-
-
-UCLASS()
+UCLASS(Blueprintable, hideCategories = (Rendering, Replication, Input, Actor, "Actor Tick"))
 class COOPGAME_API AHTTPService : public AActor
 {
 	GENERATED_BODY()
@@ -120,8 +119,6 @@ protected:
 	template <typename StructType>
 	void GetStructFromJsonString(FHttpResponsePtr Response, StructType& StructOutput);
 
-	FString TempTokenHolder;
-
 public:
 	
 	// Called every frame
@@ -132,10 +129,11 @@ public:
 	void Login(FRequest_Login LoginCredentials);
 	void LoginResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
-	void GetStatsMe();
-	void GetStatsMeResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	// Login overload w/ player state
+	void Login(FRequest_Login LoginCredentials, ACustomPlayerState* PlayerState);
+	void LoginResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful, ACustomPlayerState* PlayerState);
 
-	void PutShotStats(FSend_Shot ShotBody);
-	void PutShotStats_Response(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void GetStatsMe(FString Hash);
+	void GetStatsMeResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 };

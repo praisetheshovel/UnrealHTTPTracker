@@ -3,6 +3,7 @@
 
 #include "Public/HTTPService.h"
 #include "Public/SCharacter.h"
+#include "Public/CustomPlayerState.h"
 
 #include "Runtime/Online/HTTP/Public/Interfaces/IHttpResponse.h"	// IHttpRequest
 #include "Runtime/Online/HTTP/Public/HttpModule.h"					// CreateRequest
@@ -20,6 +21,9 @@ AHTTPService::AHTTPService()
 	Http = &FHttpModule::Get();
 	ApiBaseUrl = "http://localhost:5000/api/";
 	AuthorizationHeader = TEXT("x-auth-token");
+
+	this->bReplicates = true;
+	SetReplicates(true);
 }
 
 // Called when the game starts or when spawned
@@ -27,6 +31,9 @@ void AHTTPService::BeginPlay()
 {
 	Super::BeginPlay();
 	Http = &FHttpModule::Get();
+
+	this->bReplicates = true;
+	SetReplicates(true);
 
 	// You can uncomment this out for testing.
 	
@@ -122,35 +129,51 @@ void AHTTPService::Login(FRequest_Login LoginCredentials) {
 	Send(Request);
 }
 
+
+void AHTTPService::Login(FRequest_Login LoginCredentials, ACustomPlayerState* PlayerState) 
+{
+	FString ContentJsonString;
+	GetJsonStringFromStruct<FRequest_Login>(LoginCredentials, ContentJsonString);
+
+	UE_LOG(LogTemp, Warning, TEXT("Struct into a JSON string: %s"), *ContentJsonString);
+
+	TSharedRef<IHttpRequest> Request = PostRequest("auth", ContentJsonString);
+
+	// We'll add the PlayerState to the bound response method so that we can use it later
+	Request->OnProcessRequestComplete().BindUObject(this, &AHTTPService::LoginResponse, PlayerState);
+	Send(Request);
+}
+
+
 void AHTTPService::LoginResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful) {
 	if (!ResponseIsValid(Response, bWasSuccessful)) return;
-
 	
 	FResponse_Login LoginResponse;
 	GetStructFromJsonString<FResponse_Login>(Response, LoginResponse);
-	/*
-	UE_LOG(LogTemp, Warning, TEXT("Token: %s"), *LoginResponse.token);
-	UE_LOG(LogTemp, Warning, TEXT("ID: %s"), *LoginResponse.user.id);
-	UE_LOG(LogTemp, Warning, TEXT("Name: %s"), *LoginResponse.user.name);
-	UE_LOG(LogTemp, Warning, TEXT("Avatar: %s"), *LoginResponse.user.avatar);
-
-	// Login success, save our hash (JWT token)
-	TempTokenHolder = LoginResponse.token;
-	UE_LOG(LogTemp, Warning, TEXT("TempTokenHolder: %s"), *TempTokenHolder);
-
-	//	** AUTH TEST ROUTE -- ONLY TO BE USED TO TEST ROUOTES QUICKLY** 
-	//	TODO: IMPLEMENT PLAYERSTATE TO HOLD JWT TOKEN**
-
-	FSend_Shot TestShot;
-	TestShot.Time = "TestTime";
-	TestShot.Impact = "TestImpact";
-	TestShot.Distance = "TestDistance";
-	*/
 }
 
-void AHTTPService::GetStatsMe() {
+
+void AHTTPService::LoginResponse(FHttpRequestPtr Request,FHttpResponsePtr Response,bool bWasSuccessful,ACustomPlayerState* PlayerState)
+{
+	if (!ResponseIsValid(Response, bWasSuccessful)) return;
+
+	FResponse_Login LoginResponse;
+	GetStructFromJsonString<FResponse_Login>(Response, LoginResponse);
+
+	UE_LOG(LogTemp, Warning, TEXT("token: %s"), *LoginResponse.token);
+	UE_LOG(LogTemp, Warning, TEXT("name: %s"), *LoginResponse.user.name);
+
+	// We'll give back the information to the player's state so they can do something with it.
+	PlayerState->OnLoginSuccess(LoginResponse);
+}
+
+
+/**************************************************************************************************************************/
+
+
+void AHTTPService::GetStatsMe(FString Hash) {
 	TSharedRef<IHttpRequest> Request = GetRequest("stats/me");
-	SetAuthorizationHash(TempTokenHolder, Request);
+	SetAuthorizationHash(Hash, Request);
 	Request->OnProcessRequestComplete().BindUObject(this, &AHTTPService::GetStatsMeResponse);
 	Send(Request);
 }
@@ -161,26 +184,15 @@ void AHTTPService::GetStatsMeResponse(FHttpRequestPtr Request, FHttpResponsePtr 
 	GetStructFromJsonString<FResponse_Stats>(Response, StatsResponse);
 	UE_LOG(LogTemp, Warning, TEXT("StatsDocumentID: %s"), *StatsResponse._id);
 	UE_LOG(LogTemp, Warning, TEXT("StatsUserID: %s"), *StatsResponse.user);
-	for (auto shot : StatsResponse.shots) {
-		UE_LOG(LogTemp, Warning, TEXT("Time: %s"), *shot.Time);
+	for (auto shot : StatsResponse.matches[0].shots) {
+		UE_LOG(LogTemp, Warning, TEXT("Time: %s"), *shot.time);
 		UE_LOG(LogTemp, Warning, TEXT("_id: %s"), *shot._id);
-		UE_LOG(LogTemp, Warning, TEXT("Impact: %s"), *shot.Impact);
-		UE_LOG(LogTemp, Warning, TEXT("Distance: %s"), *shot.Distance);
+		UE_LOG(LogTemp, Warning, TEXT("Impact: %s"), *shot.impact);
+		UE_LOG(LogTemp, Warning, TEXT("Distance: %s"), *shot.distance);
 	}
 }
 
-void AHTTPService::PutShotStats(FSend_Shot ShotBody)
-{
-	FString ContentJsonString;
-	GetJsonStringFromStruct<FSend_Shot>(ShotBody, ContentJsonString);
-
-	UE_LOG(LogTemp, Warning, TEXT("PutShotStats.ContentJsonString: %s"), *ContentJsonString);
-
-	TSharedRef<IHttpRequest> Request = PutRequest("stats//matchidentifier", ContentJsonString);
-	SetAuthorizationHash(TempTokenHolder, Request);
-	Request->OnProcessRequestComplete().BindUObject(this, &AHTTPService::GetStatsMeResponse);
-	Send(Request);
-}
+/**************************************************************************************************************************/
 
 // Called every frame
 void AHTTPService::Tick(float DeltaTime)

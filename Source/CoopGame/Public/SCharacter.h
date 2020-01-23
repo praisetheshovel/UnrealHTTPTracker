@@ -10,10 +10,11 @@ class UCameraComponent;
 class USpringArmComponent;
 class ASWeapon;
 class AHTTPService;
+class ACustomPlayerState;
 
 USTRUCT()
 struct FRequest_Login {
-	GENERATED_USTRUCT_BODY()
+	GENERATED_BODY()
 
 	UPROPERTY() FString email;
 	UPROPERTY() FString password;
@@ -21,26 +22,25 @@ struct FRequest_Login {
 	FRequest_Login() {}
 };
 
-
 USTRUCT()
-struct FNestedUser {
-	GENERATED_USTRUCT_BODY()
+struct FMatch_Session_Shot {
+	GENERATED_BODY()
 
-	UPROPERTY() FString id;
-	UPROPERTY() FString name;
-	UPROPERTY() FString avatar;
+		UPROPERTY() FString impact;
+	UPROPERTY() float distance;
+	UPROPERTY() FDateTime time;
 
-	FNestedUser() {}
+	FMatch_Session_Shot() {}
 };
 
 USTRUCT()
-struct FResponse_Login {
-	GENERATED_USTRUCT_BODY()
+struct FMatch_Session {
+	GENERATED_BODY()
 
-	UPROPERTY() FString token;
-	UPROPERTY() FNestedUser user;
+		UPROPERTY() FString matchsessionid;
+	UPROPERTY() TArray<FMatch_Session_Shot> shots;
 
-	FResponse_Login() {}
+	FMatch_Session() {}
 };
 
 UCLASS()
@@ -100,7 +100,7 @@ protected:
 		FName WeaponAttachSocketName;
 
 	AHTTPService* MyHTTPService;
-
+	ACustomPlayerState* CustomPlayerState;
 
 public:	
 	// Called every frame
@@ -111,4 +111,6 @@ public:
 
 	// Overriding viewpoint to be in place of third-person camera instead of actor eyes
 	virtual FVector GetPawnViewLocation() const override;
+
+	FMatch_Session PlayerMatchSessionStats;
 };
