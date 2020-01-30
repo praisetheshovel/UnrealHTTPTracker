@@ -19,6 +19,9 @@ struct FNestedUser;
 struct FResponse_Login;
 struct FMatch_Session;
 
+class UUserWidget;
+class ASCharacter;
+
 /* PLACE INTO ANOTHER FILE
 USTRUCT()
 struct FRequest_Login {
@@ -119,6 +122,8 @@ protected:
 	template <typename StructType>
 	void GetStructFromJsonString(FHttpResponsePtr Response, StructType& StructOutput);
 
+	ASCharacter* LocalCharacter;
+
 public:
 	
 	// Called every frame
@@ -136,4 +141,8 @@ public:
 	void GetStatsMe(FString Hash);
 	void GetStatsMeResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
+	UUserWidget* LoginWidget;
+
+	UFUNCTION()
+	void OnLoginClicked();
 };

@@ -11,6 +11,11 @@
 #include "Runtime/JsonUtilities/Public/JsonObjectConverter.h"		// FJsonObjectConverter
 #include "Runtime/Json/Public/Dom/JsonObject.h"						// GetObjectField
 
+#include "Blueprint/UserWidget.h"
+#include "Components/Button.h"
+#include "Components/EditableTextBox.h"
+#include "Components/TextBlock.h"
+
 
 // Sets default values
 AHTTPService::AHTTPService()
@@ -150,6 +155,8 @@ void AHTTPService::LoginResponse(FHttpRequestPtr Request, FHttpResponsePtr Respo
 	
 	FResponse_Login LoginResponse;
 	GetStructFromJsonString<FResponse_Login>(Response, LoginResponse);
+
+	LoginWidget->RemoveFromViewport();
 }
 
 
@@ -194,10 +201,28 @@ void AHTTPService::GetStatsMeResponse(FHttpRequestPtr Request, FHttpResponsePtr 
 
 /**************************************************************************************************************************/
 
+void AHTTPService::OnLoginClicked()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Login Requested..."));
+	UEditableTextBox* EmailText = Cast<UEditableTextBox>(LoginWidget->
+		GetWidgetFromName(TEXT("EmailTextBox")));
+	UEditableTextBox* PasswordText = Cast<UEditableTextBox>(LoginWidget->
+		GetWidgetFromName(TEXT("PasswordTextBox")));
+	UTextBlock* ErrorText = Cast<UTextBlock>(LoginWidget->GetWidgetFromName(TEXT("ErrorMessage")));
+	if ((EmailText) && (PasswordText) && (ErrorText))
+	{
+		FRequest_Login LoginCredentials;
+		LoginCredentials.email = EmailText->GetText().ToString();
+		LoginCredentials.password = PasswordText->GetText().ToString();
+		ErrorText->SetVisibility(ESlateVisibility::Hidden);
+		Login(LoginCredentials);
+	}
+}
+
 // Called every frame
 void AHTTPService::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
+
 

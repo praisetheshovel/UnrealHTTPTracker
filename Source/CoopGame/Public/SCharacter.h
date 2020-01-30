@@ -12,6 +12,8 @@ class ASWeapon;
 class AHTTPService;
 class ACustomPlayerState;
 
+class UUserWidget;
+
 USTRUCT()
 struct FRequest_Login {
 	GENERATED_BODY()
@@ -113,4 +115,9 @@ public:
 	virtual FVector GetPawnViewLocation() const override;
 
 	FMatch_Session PlayerMatchSessionStats;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+		TSubclassOf<class UUserWidget> LoginWidgetClass;
+
+	UUserWidget* MyLoginWidget;
 };

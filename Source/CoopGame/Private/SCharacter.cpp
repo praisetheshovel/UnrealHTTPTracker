@@ -14,6 +14,9 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Kismet/GameplayStatics.h"
 
+#include "Blueprint/UserWidget.h"
+#include "Components/Button.h"
+
 // Sets default values
 ASCharacter::ASCharacter()
 {
@@ -44,26 +47,21 @@ ASCharacter::ASCharacter()
 void ASCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	FRequest_Login LoginCredentials;
-	LoginCredentials.email = TEXT("onionknight@gmail.com");
-	LoginCredentials.password = TEXT("123123");
 
 	MyHTTPService = GetWorld()->SpawnActor<AHTTPService>();
 
-	CustomPlayerState = Cast<ACustomPlayerState>(UGameplayStatics::GetPlayerController(GetWorld(), 0)->PlayerState);
-
-	if (CustomPlayerState)
+	if (LoginWidgetClass)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Success: CustomPlayerState Casted"));
+		UE_LOG(LogTemp, Warning, TEXT("LoginWidgetClass Found..."));
+		MyLoginWidget = CreateWidget<UUserWidget>(GetWorld(), LoginWidgetClass);
+		MyLoginWidget->AddToViewport();
+		UButton* LoginButton = Cast<UButton>(MyLoginWidget->GetWidgetFromName(TEXT("LoginButton")));
+		if (LoginButton)
+		{
+			MyHTTPService->LoginWidget = MyLoginWidget;
+			LoginButton->OnClicked.AddDynamic(MyHTTPService, &AHTTPService::OnLoginClicked);
+		}
 	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Failed: CustomPlayerState Casted"));
-	}
-
-
-	MyHTTPService->Login(LoginCredentials, CustomPlayerState);
 	
 	DefaultFOV = CameraComp->FieldOfView;
 
